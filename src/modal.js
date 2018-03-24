@@ -1,5 +1,5 @@
 import React from 'react'
-import {Form, Button, Modal,FormControl,ControlLabel,Glyphicon,Col,Row} from 'react-bootstrap'
+import {Form, Button, Modal,FormControl,ControlLabel,Glyphicon,Col,Row,InputGroup,Checkbox} from 'react-bootstrap'
 export default (props)=>{
 	const NameForm=
 		<Form inline>
@@ -9,50 +9,48 @@ export default (props)=>{
 	              defaultValue={props.currentPoll.pollName}
 	              onChange={props.generatePollName}
 	         />{' '}
-	      {/*  <Button onClick={props.setPollName}>Confirm</Button>{' '}*/}
-	        <ControlLabel>{props.currentPoll.pollName}</ControlLabel>
-		</Form>
-
-    const NameDisPlay=
-	    <ControlLabel>{props.currentPoll.pollName}{' '} 
-	        <Glyphicon 
-	           onClick={props.setPollName} 
-	           style={{fontSize:'0.6em',cursor:'pointer'}} 
-	           glyph="glyphicon glyphicon-edit" 
-	        />
-	   </ControlLabel>    
+	        <ControlLabel style={{marginTop:'5px'}}>{props.currentPoll.pollName}</ControlLabel>
+		</Form>   
 
 	return (
 		<div>
 			<Modal
               	bsSize="large"
               	aria-labelledby="contained-modal-title-lg"
-              	onHide={props.closeModal}
-              	show={props.currentPoll.modalShow}
+              	onHide={props.currentPoll.isCurrent}
+              	show={props.currentPoll.isCurrent}
             >
                 <Modal.Header>
                   <Modal.Title>
-                    {props.currentPoll.settingName?NameForm:NameDisPlay}
+                    {NameForm}
                   </Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="row">
                 	{props.currentPoll.options.map((option,position)=>{
                 		return (
-                			<Row style={{margin:'15px', marginLeft:'0'}}> 
-			                    <Col xs='8' sm='10'>
+                			<InputGroup inline style={{margin:'15px'}}>
+		                      <InputGroup.Addon 
+		                      	style={{cursor:'pointer'}}
+		                      	onClick={props.addOption}
+		                      >
+		                        	<Glyphicon glyph="glyphicon glyphicon-plus" />
+		                      </InputGroup.Addon>
 			                      <FormControl 
 			                        type="text"
 			                        placeHolder="Enter Option"
 			                        defaultValue={option.value}
 			                        onChange={(e)=>props.addOptionValue(e,position)}
 			                      /> 
-			                    </Col>
-			                    <Col xs= '3' sm='2'>
-			                      <Button onClick={props.addOption}>
-			                        <Glyphicon glyph="glyphicon glyphicon-plus" />
-			                      </Button>
-			                    </Col>
-		                    </Row>  
+			                      <InputGroup.Addon  >
+			                        <input 
+				                        style={{verticalAlign:'middle'}} 
+				                        type="checkbox"
+			                        	onClick={(e)=>props.handleVote(e,position)}
+
+			                        />{' '}
+			                        <span style={{verticalAlign:'middle'}}>{option.vote}</span>
+			                      </InputGroup.Addon>
+		                    </InputGroup>  
                 		)
                 	})}
 
@@ -63,6 +61,7 @@ export default (props)=>{
                  
                 </Modal.Body>
                 <Modal.Footer>
+                <Button onClick={props.submitVote}>Submit your vote</Button>
                   <Button onClick={props.closeModal}>Close</Button>
                 </Modal.Footer>
             </Modal>
