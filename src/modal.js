@@ -17,7 +17,7 @@ export default (props)=>{
 			<Modal
               	bsSize="large"
               	aria-labelledby="contained-modal-title-lg"
-              	onHide={props.currentPoll.isCurrent}
+              	onHide={props.closeModal}
               	show={props.currentPoll.isCurrent}
             >
                 <Modal.Header>
@@ -42,12 +42,7 @@ export default (props)=>{
 			                        onChange={(e)=>props.addOptionValue(e,position)}
 			                      /> 
 			                      <InputGroup.Addon  >
-			                        <input 
-				                        style={{verticalAlign:'middle'}} 
-				                        type="checkbox"
-			                        	onClick={(e)=>props.handleVote(e,position)}
-
-			                        />{' '}
+			                       
 			                        <span style={{verticalAlign:'middle'}}>{option.vote}</span>
 			                      </InputGroup.Addon>
 		                    </InputGroup>  
@@ -61,7 +56,7 @@ export default (props)=>{
                  
                 </Modal.Body>
                 <Modal.Footer>
-                <Button onClick={props.submitVote}>Submit your vote</Button>
+                <Button onClick={props.submitVote}>Confirm</Button>
                   <Button onClick={props.closeModal}>Close</Button>
                 </Modal.Footer>
             </Modal>
