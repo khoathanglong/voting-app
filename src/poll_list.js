@@ -22,13 +22,20 @@ export default (props)=>{
 						    </OverlayTrigger>	
 		            	</Panel.Title> {' '}
 		            	<Panel.Title style={{display:'inline'}} toggle>
-		              		{poll.pollName}
+		              		{poll.pollName}{' '}
+		              		<i style={{fontSize:'0.8em'}}>created by {poll.createdBy}</i>
 		            	</Panel.Title>
+		            	
 		            	
 		          	</Panel.Heading>		         
 		            	<Panel.Body collapsible>
 		            		<Col xs='12' sm='6'>
 								{poll.options.map((option,position)=>{
+									let votedPollNum = props.userVotedOnPoll.findIndex(el=>
+											{//select the index of poll_id in the list user voted on
+												return el.hasOwnProperty(poll.id)
+											}
+										);
 			                		return (
 			                				
 			                					<InputGroup inline style={{margin:'5px'}}>
@@ -41,7 +48,8 @@ export default (props)=>{
 								                        <input 
 									                        style={{verticalAlign:'middle'}} 
 									                        type="checkbox"
-								                        	onClick={(e)=>props.handleVote(e,position,index)}
+									                        checked={!votedPollNum?props.userVotedOnPoll[votedPollNum][poll.id].includes(position):false}
+								                        	onChange={(e)=>props.handleVote(e,position,index,poll.id)}
 								                        />{' '}
 								                        <span style={{verticalAlign:'middle'}}>{option.vote}</span>
 								                    </InputGroup.Addon>

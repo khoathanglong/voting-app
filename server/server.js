@@ -25,21 +25,19 @@ MongoClient.connect(url,(err,client)=>{
 	app.post('/signup', (req,res)=>{
 		let username=req.body.username;
 		db.collection('users').findOne({username:username},(err,result)=>{//add username
-			assert.equal(null,err)
-			console.log(result)
+			assert.equal(null,err);
 			if(result){
-				res.json(`username ${username} already exists`)
+				res.json({error:`username ${username} already exists`});
 			}else{
 				let password=bcrypt.hash(req.body.password,10,(err,hash)=>{
 					if (err){
-						res.status(500).json({err: err})
+						res.status(500).json({errror: err})
 					}else{
-						console.log(hash)
 						db.collection('users').insertOne({
 							username:username,
 							password:hash,
-							poll:[] //list of user's poll
-						}).then(()=>{res.json(`account created successfully`)})
+							votedOnPoll:[{1:{}}] //user voted on poll and options? // 1:{} is the sample 
+						}).then(()=>{res.json({message:`account created successfully`})})
 					}
 				});
 				
@@ -49,36 +47,63 @@ MongoClient.connect(url,(err,client)=>{
 	});
 
     app.post('/login',(req,res)=>{
-     	console.log(req.body.username)
-       db.collection('users').findOne({username:req.body.username},(err,result)=>{
+        db.collection('users').findOne({username:req.body.username},(err,result)=>{
        		if(!result){
        			return res.status(500)
        					.json({error:'Username or Password is wrong, please try again'})}
        		bcrypt.compare(req.body.password,result.password,(err,matchPassword)=>{
-       			console.log(matchPassword)
-       			if(err){return err}
+       			if(err){return err};
        			if (!matchPassword){
        				return res.status(500)
        						.json({error:'Username or Password is wrong, please try again'})
-       			}
+       			};
        			const payload={
-       				authenticated:result.authenticated,
+       				authenticated:true,
        				username:result.username
-       			}
+       			};
        			const token =jwt.sign(payload,auth.secret,{
        				 expiresIn : 60*60//24 hours
        			});
-
        			res.json({
        				token:token,
        				authenticated:true,
-       				poll:result.poll,
+       				votedOnPoll:result.votedOnPoll,
        				username:result.username
-       			})
-       		})   		
-       })
+       			});
+       		});   		
+       });
       
-    })	
+    });
+    //handle editPoll and create new poll
+	app.post('/verifyToken',verifyToken,(req,res)=>{
+		res.json({authenticated:req.userData.authenticated})//if token is true, verify it
+	});
+
+	app.get('/polls',(req,res)=>{
+		db.collection('polls').find({},{_id:0})
+		.toArray((err,result)=>{
+			assert.equal(null,err);
+			res.json({pollList:result})
+		})
+	})
+
+	app.put('/poll',verifyToken,(req,res)=>{
+		let updatedPoll=req.body.poll;
+		db.collection('polls').findOne({id:updatedPoll.id},(err,result)=>{
+			assert.equal(null,err);
+			console.log(result)
+			if(!result){
+				db.collection('polls').insertOne(updatedPoll);
+				res.json({message:'New poll added successfully'})
+			}else{
+				//handle update here
+				//can be vote update or options update
+				//easy but not optimized by replace the whole document with the new one
+				db.collection('polls').replaceOne({id:updatedPoll.id},updatedPoll)
+				.then(()=>{res.json({message:'your poll is editted successfully'})})
+			}
+		})
+	})	
 	
 })//outer
 

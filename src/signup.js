@@ -23,6 +23,7 @@ export default (props)=>{
 		              name="password"
 		              required
 	            	/><br/>
+	            	<p style={{color:'red',fontSize:'0.8em'}}>{props.signupError}</p>
 	            	<div style={{textAlign:'center'}}>
 	            		<Button type="submit" bsStyle="primary">Sign Up</Button>
 	            	</div>     		

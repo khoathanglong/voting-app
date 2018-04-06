@@ -15,7 +15,7 @@ export default (props)=>{
 				<Navbar.Collapse>
 					<Nav>
 						<NavItem onClick={props.openSignUp}>
-							Sigup
+							Sign up
 						</NavItem>
 						<NavDropdown title="Log in">
 							<MenuItem evenKey={1} onClick={props.openLogIn}>
@@ -25,7 +25,11 @@ export default (props)=>{
 						</NavDropdown>
 					</Nav>
 					<Nav pullRight>
-						<NavItem  eventKey={1} href="#" style={{paddingRight:'10px'}}>
+						<NavItem 
+							eventKey={1} 
+							href="#" 
+							style={{paddingRight:'10px'}}
+						>
 							{props.username}
 						</NavItem>
 					</Nav>
