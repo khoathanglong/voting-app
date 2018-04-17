@@ -1,0 +1,16 @@
+{pollList:[
+	{
+		{id:1,createdBy:'admin',pollName:'Sample',options:[{value:'test',vote:0,isVoted:false}],isCurrent:false},
+		{id:1,createdBy:'admin',pollName:'Sample',options:[{value:'test',vote:0,isVoted:false}],isCurrent:false}
+	}
+}]
+{user:
+	{username:'',
+		votedOnPoll:
+		[
+			{
+				pollID:[option]
+			}
+		]
+	}
+}

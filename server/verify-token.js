@@ -6,11 +6,12 @@ module.exports = (req,res,next)=>{
 		const decoded = jwt.verify(req.body.token,auth.secret);
 		console.log(decoded)
 		req.userData=decoded;
-		next();		
+			
 	}catch(err){
-		return res.status(401).json({
+		req.userData=null;
+		res.status(401).json({
 			message: "You're not logging in, please log in to continue"
 		})
 	}
-
+	next();	
 }

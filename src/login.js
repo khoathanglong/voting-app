@@ -1,5 +1,5 @@
 import React from 'react'
-import {Form, FormControl,ControlLabel,Col,Button,Row,Modal} from 'react-bootstrap'
+import {Form, FormControl,ControlLabel,Button,Modal} from 'react-bootstrap'
 
 export default (props)=>{
 	return (

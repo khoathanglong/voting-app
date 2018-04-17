@@ -36,7 +36,7 @@ MongoClient.connect(url,(err,client)=>{
 						db.collection('users').insertOne({
 							username:username,
 							password:hash,
-							votedOnPoll:[{1:{}}] //user voted on poll and options? // 1:{} is the sample 
+							votedOnPoll:[] //user voted on poll and options? // 1:{} is the sample 
 						}).then(()=>{res.json({message:`account created successfully`})})
 					}
 				});
@@ -58,8 +58,9 @@ MongoClient.connect(url,(err,client)=>{
        						.json({error:'Username or Password is wrong, please try again'})
        			};
        			const payload={
-       				authenticated:true,
-       				username:result.username
+       				votedOnPoll:result.votedOnPoll,
+       				username:result.username,
+       				authenticated:true
        			};
        			const token =jwt.sign(payload,auth.secret,{
        				 expiresIn : 60*60//24 hours
@@ -75,8 +76,12 @@ MongoClient.connect(url,(err,client)=>{
       
     });
     //handle editPoll and create new poll
-	app.post('/verifyToken',verifyToken,(req,res)=>{
-		res.json({authenticated:req.userData.authenticated})//if token is true, verify it
+	app.post('/verify',verifyToken,(req,res)=>{
+		//if token is true, verify it
+		db.collection('users').findOne({username:req.userData.username},(err,result)=>{
+				res.json({...req.userData,votedOnPoll:result.votedOnPoll})
+			}
+		)
 	});
 
 	app.get('/polls',(req,res)=>{
@@ -87,8 +92,9 @@ MongoClient.connect(url,(err,client)=>{
 		})
 	})
 
-	app.put('/poll',verifyToken,(req,res)=>{
+	app.put('/poll/edit',verifyToken,(req,res)=>{
 		let updatedPoll=req.body.poll;
+		console.log(updatedPoll)
 		db.collection('polls').findOne({id:updatedPoll.id},(err,result)=>{
 			assert.equal(null,err);
 			console.log(result)
@@ -99,15 +105,34 @@ MongoClient.connect(url,(err,client)=>{
 				//handle update here
 				//can be vote update or options update
 				//easy but not optimized by replace the whole document with the new one
-				db.collection('polls').replaceOne({id:updatedPoll.id},updatedPoll)
+				db.collection('polls').updateOne(
+					{id:updatedPoll.id},
+					{$set:{options:updatedPoll.options,pollName:updatedPoll.pollName}}
+				)
 				.then(()=>{res.json({message:'your poll is editted successfully'})})
 			}
-		})
+		});
+	});
+
+	app.put('/poll/vote',(req,res)=>{
+		let updatedPoll=req.body.poll;
+		updatedPoll.options.forEach(each=>{each.isVoted=false})
+		db.collection('polls').updateOne(
+			{id:updatedPoll.id},
+			{$set:{options:updatedPoll.options,pollName:updatedPoll.pollName}}
+		)
 	})	
+
+	app.put('/vote/user/:username',(req,res)=>{
+			let username=req.params.username;console.log(req.body.votedOnPoll)
+			if(username){
+				db.collection('users').updateOne(
+					{username:username},
+					{$set:{votedOnPoll:req.body.votedOnPoll}}
+				)
+			}else{console.log('zzz')}
+	})
+
 	
 })//outer
-
-
-
-
 app.listen(3001,()=>{console.log('server connected on:3001')})

@@ -1,23 +1,25 @@
+//tomorrow task: add votedOnPoll when authenticated User votes
+
 import React, { Component } from 'react';
 import './App.css';
-import {Button,Grid,Form, FormControl, Alert} from 'react-bootstrap'
-import ModalPoll from './modal.js'
-import PanelList from './poll_list.js'
-import SignUp from './signup.js'
-import LogIn from './login.js'
-import MyNavbar from './nav.js'
+import {Grid} from 'react-bootstrap';
+import ModalPoll from './modal.js';
+import PanelList from './poll_list.js';
+import SignUp from './signup.js';
+import LogIn from './login.js';
+import MyNavbar from './nav.js';
 class App extends Component {
   constructor(){
     super();
-    this.currentPoll= {id:null,createdBy:'',pollName:'',options:[{value:'',vote:0}],isCurrent:false}
+    this.currentPoll= {id:null,createdBy:'',pollName:'',options:[{value:'',vote:0,isVoted:false}],isCurrent:false}
     this.state=
     {
       pollList:
         [
-          {id:1,createdBy:'admin',pollName:'Sample',options:[{value:'test',vote:0}],isCurrent:false}
+          // {id:1,createdBy:'admin',pollName:'Sample',options:[{value:'test',vote:0,isVoted:false}],isCurrent:false}
         ],
       currentPoll:this.currentPoll,
-      user:{username:'',votedOnPoll:[{1:[]}]},
+      user:{username:'',votedOnPoll:[],loggedIn:false},
       IsLoggingIn:false,
       IsSigningUp:false,
       loginError:'',
@@ -34,18 +36,27 @@ class App extends Component {
     this.handleVote=this.handleVote.bind(this);
     this.handleSignUp=this.handleSignUp.bind(this);
     this.handleLogIn=this.handleLogIn.bind(this);
-    this.editPoll=this.editPoll.bind(this);
+    this.userVerify=this.userVerify.bind(this);
+    this.openEditPanel=this.openEditPanel.bind(this);
+    this.handleLogOut=this.handleLogOut.bind(this);
+    this.fetchLogin=this.fetchLogin.bind(this)
   }
 
   componentDidMount(){
     fetch('/polls')
     .then(res=>res.json())
     .then(result=>{
-      console.log(result.pollList)
       this.setState(preState=>{
         return {pollList:preState.pollList.concat(result.pollList)}
       })
     })
+    .then(()=>{ //must set pollList state before verify user
+       const token=sessionStorage.getItem('token');
+      if(token){
+        this.userVerify();
+      }
+    })
+   
   }
 
   openLogIn(){
@@ -64,24 +75,14 @@ class App extends Component {
   }
 
   createNewPoll(){
-    fetch('/verifyToken',{
-      method:"POST",
-      headers:{'Content-Type': 'application/json'},
-      body:JSON.stringify({token:sessionStorage.getItem('token')})
-    })
-    .then(res=>res.json())
-    .then(result=>{
-      if(result.authenticated){
-        this.setState({currentPoll:
-          {
-            ...this.state.currentPoll,
-            isCurrent:true,
+    this.setState(preState=>{
+        return {
+          currentPoll:{
+            id:null,createdBy:'',pollName:'',options:[{value:'',vote:0,isVoted:false}],
+            isCurrent:this.state.user.username===""?false:true
           }
-        })
-      }else{
-        alert(result.message)//server response if token is not correct
-      }
-    })
+        }
+      })
   }
 
 
@@ -112,7 +113,14 @@ class App extends Component {
       }
     });
   }
+  fetchUserVote(votedOnPoll){
+    fetch(`/vote/user/${this.state.user.username}`,{
+      method:'put',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({votedOnPoll:votedOnPoll})
+    })
 
+  }
   submitPoll(){
     let filteredBlankOptions=this.state.currentPoll.options.filter(each=>each.value!=="");
     if(typeof(this.state.currentPoll.id)==='number'){//need to be improved?//editing Poll
@@ -129,28 +137,29 @@ class App extends Component {
                       id:Math.floor(Math.random()*100+10)+Date.now(),
                       createdBy:this.state.user.username
                     };
-      
       this.updatePoll(newPoll);
-
       this.setState(preState=>{
-        let votedOnPoll=preState.user.votedOnPoll.slice();
-        let newUnvotedPoll={};
-        newUnvotedPoll[newPoll.id]=[];//create an element of unVotedPoll
+        let newUnvotedPoll;
+        if (this.state.user.username!==""){
+          newUnvotedPoll={};
+          newUnvotedPoll[newPoll.id]=[];//create an element of unVotedPoll
+        }
+        let fetchVotedOnPoll=preState.user.votedOnPoll.concat([newUnvotedPoll]);
         return  {
                   pollList:
                     [...preState.pollList,
                       newPoll
                     ],
-                    user:{...preState.user, votedOnPoll:preState.user.votedOnPoll.concat([newUnvotedPoll])},
-                  currentPoll:{id:null,pollName:'',options:[{value:'',vote:0}],isCurrent:false}
+                    user:{...preState.user, votedOnPoll:fetchVotedOnPoll},
+                  currentPoll:{id:null,pollName:'',options:[{value:'',vote:0,isVoted:false}],isCurrent:false}
                   //resset current poll
-                }
-            });
+                };
+      });
     }
   }
 
   updatePoll(newPoll){
-    fetch('/poll',{
+    fetch('/poll/edit',{
         method:"PUT",
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({poll:newPoll,token:sessionStorage.getItem('token')})
@@ -161,24 +170,43 @@ class App extends Component {
       })
   }
 
+  votePoll(newPoll){
+    fetch('/poll/vote',{
+        method:"PUT",
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({poll:newPoll,token:sessionStorage.getItem('token')})
+    })
+    .then(res=>res.json())
+    .then(result=>{
+      console.log(result)
+    });
+  }
+
   handleVote(e,position,index,pollId){
     let pollList=this.state.pollList.slice();//this can be improved later with Immutable.js
-    let votedOnPoll= this.state.user.votedOnPoll;
+    let votedOnPoll= this.state.user.votedOnPoll.slice();
+    let votedOption=votedOnPoll[votedOnPoll.findIndex(el=>el.hasOwnProperty(pollId))];
+    console.log('votedOption:', votedOption)
     if(e.target.checked){
       pollList[index].options[position].vote+=1;
-      if(this.state.user.username!==""){
-        votedOnPoll[votedOnPoll.findIndex(el=>el.hasOwnProperty(pollId))][pollId].concat(position);//add options that user voted        
-      }
+      pollList[index].options[position].isVoted=true;
+      if(votedOption){console.log('zz',votedOption[pollId],position)
+        votedOption[pollId].push(position);//add options that user voted    
+      }else{//create the first vote
+        let voteOnNewPoll= {};
+        voteOnNewPoll[pollId]=[position];
+        votedOnPoll.push(voteOnNewPoll);console.log('yyy:', votedOnPoll)
+      };console.log('votedOnPollafterCheck:', votedOnPoll)
     }else{
       pollList[index].options[position].vote-=1;
-      if(this.state.user.username!==""){
-        votedOnPoll[votedOnPoll.findIndex(el=>el.hasOwnProperty(pollId))][pollId].splice(position,1);//add options that user voted        
-      }
-      //remove options that user unvoted
+      pollList[index].options[position].isVoted=false;
+        votedOption[pollId].splice(votedOption[pollId].findIndex(el=>el===position),1);//remove options that user unchecks 
+        console.log('position',position,votedOption[pollId])   
+        console.log('votedOnPollfinalzz:', votedOnPoll)   
     }
-
-    this.updatePoll(pollList[index]); // Put updated poll to the server
-
+    console.log('votedOnPollfinal:', votedOnPoll)
+    this.votePoll({...pollList[index]}); // Put updated poll to the server
+    this.fetchUserVote(votedOnPoll) ;
     this.setState((preState)=>
       (
         {
@@ -188,28 +216,86 @@ class App extends Component {
       )  
     );
   }
+  openEditPanel(index){
+    this.setState(preState=>{
+      return {
+        currentPoll:{
+          ...preState.pollList[index],
+          isCurrent:this.state.user.username===preState.pollList[index].createdBy
+                    &&this.state.user.username!==""?true:false
+        }
+      }
+    })
+  }
+  checkUserVoted(user){
+     // user:{
+     //          username:result.username,
+     //          votedOnPoll:result.votedOnPoll,
+     //          loggedIn:result.authenticated
+     //        } user should look like this
 
-  editPoll(index){
-    fetch('/verifyToken',{
+    let userPollList= this.state.pollList.slice();
+      userPollList.forEach((poll,index)=>{
+        user.votedOnPoll.forEach((pollVote,position)=>{
+          if (poll.id in pollVote){
+            let newpollOptions=poll.options.map((each,i)=>{
+              if(pollVote[poll.id].indexOf(i)===-1){
+                return each
+              }else{
+                return {...each,isVoted:true}
+              }
+            });
+            poll.options=newpollOptions;
+          };
+        });
+      });
+    this.setState({user:user,IsLoggingIn:false,pollList:userPollList})
+  }
+  userVerify(){
+    fetch("/verify",{
       method:"POST",
       headers:{'Content-Type': 'application/json'},
       body:JSON.stringify({token:sessionStorage.getItem('token')})
     })
-    .then(res=>res.json())
+    .then(res=> res.json())
     .then(result=>{
-      if(result.authenticated){
-        this.setState(
-          {
-            currentPoll:
-            {...this.state.pollList[index],
-              isCurrent:true,
-            }
-          }
-        )
-      }else{
-        alert(result.message)//message from server when verify token 
+      if(result.username){
+        let user={
+          username:result.username,
+          votedOnPoll:result.votedOnPoll,
+          loggedIn:result.authenticated
+        }
+        this.checkUserVoted(user); //this will set user state and check all polls that user already voted
       }
     })
+  }
+
+  fetchLogin(username,password){
+    let userLogin={
+        username,
+        password
+      };
+    fetch('/login',{
+      method:"POST",
+      headers:{'Content-Type': 'application/json'},//content-type is a must
+      body:JSON.stringify(userLogin)
+    })
+    .then(res=>{return res.json()})
+    .then(result=>{
+          if(!result.error){
+            window.sessionStorage.setItem("token",result.token);
+            let user =
+              {
+                username:result.username,
+                votedOnPoll:result.votedOnPoll,
+                loggedIn:result.authenticated
+              };
+           //checked all the options that user already voted before
+          this.checkUserVoted(user);
+          }else{
+            this.setState({loginError:result.error})
+          }
+       })
   }
 
   handleSignUp(e){
@@ -227,44 +313,24 @@ class App extends Component {
     .then(result=>{
           if(!result.error){
             this.setState({IsSigningUp:false})
+            this.fetchLogin(userSignUp.username,userSignUp.password)
             alert(result.message)
           }else{
             this.setState({signupError:result.error})
           }
        })
-       .catch(err=>{console.log(err)})
   }
+
 
   handleLogIn(e){
     e.preventDefault();
-    let userLogin={
-        username:e.target.username.value,
-        password:e.target.password.value
-      }
-    fetch('/login',{
-      method:"POST",
-      headers:{'Content-Type': 'application/json'},//content-type is a must
-      body:JSON.stringify(userLogin)
-    })
-    .then(res=>{return res.json()})
-    .then(result=>{
-          if(!result.error){
-            window.sessionStorage.setItem("token",result.token);
-            window.sessionStorage.setItem("username",result.username);
-            window.sessionStorage.setItem("votedOnPoll",JSON.stringify(result.votedOnPoll))
-            let user =
-              {
-                username:sessionStorage.getItem('username'),
-                votedOnPoll:JSON.parse(sessionStorage.getItem('votedOnPoll'))
-              };console.log('aaaa',user.votedOnPoll)
-            this.setState({user:{...user,votedOnPoll:[{1:[]}]},IsLoggingIn:false})
-          }else{
-            this.setState({loginError:result.error})
-          }
-       })
-       .catch(err=>{console.log(err)})
+    this.fetchLogin(e.target.username.value,e.target.password.value)
   }
 
+  handleLogOut(){
+    sessionStorage.removeItem('token');
+    this.setState({user:{username:'',votedOnPoll:[],loggedIn:false}})
+  }
   render() {       
     return (
       <Grid className="App">
@@ -272,7 +338,8 @@ class App extends Component {
             startVote={this.createNewPoll}
             openLogIn={this.openLogIn}
             openSignUp={this.openSignUp}
-            username={this.state.user.username}
+            user={this.state.user}
+            logOut={this.handleLogOut}
           />
           <SignUp 
             handleSignUp={this.handleSignUp}
@@ -303,7 +370,7 @@ class App extends Component {
             addOptionValue={this.addOptionValue}
             handleVote={this.handleVote}
             submitVote={this.submitPoll}
-            editPoll={this.editPoll}
+            editPoll={this.openEditPanel}
             userVotedOnPoll={this.state.user.votedOnPoll}
           /> 
       </Grid>

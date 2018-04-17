@@ -1,11 +1,11 @@
 import React from 'react'
-import {Form, Button, Modal,FormControl,ControlLabel,Glyphicon,Col,Row,InputGroup,Checkbox} from 'react-bootstrap'
+import {Form, Button, Modal,FormControl,ControlLabel,Glyphicon,InputGroup} from 'react-bootstrap'
 export default (props)=>{
 	const NameForm=
 		<Form inline>
 	        <FormControl 
 	              type='text' 
-	              placeHolder="Poll Name" 
+	              placeholder="Poll Name" 
 	              defaultValue={props.currentPoll.pollName}
 	              onChange={props.generatePollName}
 	         />{' '}
@@ -28,7 +28,7 @@ export default (props)=>{
                 <Modal.Body className="row">
                 	{props.currentPoll.options.map((option,position)=>{
                 		return (
-                			<InputGroup inline style={{margin:'15px'}}>
+                			<InputGroup inline style={{margin:'15px'}} key={position}>
 		                      <InputGroup.Addon 
 		                      	style={{cursor:'pointer'}}
 		                      	onClick={props.addOption}
@@ -37,12 +37,11 @@ export default (props)=>{
 		                      </InputGroup.Addon>
 			                      <FormControl 
 			                        type="text"
-			                        placeHolder="Enter Option"
+			                        placeholder="Enter Option"
 			                        defaultValue={option.value}
 			                        onChange={(e)=>props.addOptionValue(e,position)}
 			                      /> 
 			                      <InputGroup.Addon  >
-			                       
 			                        <span style={{verticalAlign:'middle'}}>{option.vote}</span>
 			                      </InputGroup.Addon>
 		                    </InputGroup>  
