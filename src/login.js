@@ -7,6 +7,7 @@ export default (props)=>{
 			show={props.openLogInModal}
 			onHide={props.handleModalHide}
 		>
+			<h3 style={{textAlign:'center'}}>Log In</h3>
 			<Form onSubmit={props.handleLogIn} style={{margin:'10px'}}>
 					<ControlLabel>Email:</ControlLabel>
 					<FormControl  

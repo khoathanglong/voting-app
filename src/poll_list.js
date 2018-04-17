@@ -1,5 +1,6 @@
 import React from 'react';
 import {OverlayTrigger ,Tooltip,PanelGroup,Panel, FormControl,Col,InputGroup } from 'react-bootstrap';
+import {HorizontalBar} from 'react-chartjs-2';
 
 export default (props)=>{
 	const tooltip = (
@@ -7,11 +8,70 @@ export default (props)=>{
 			    edit
 			  </Tooltip>
 			);
+	const filterPoll=(criteria)=>{
+		let PollOfUser=props.pollList;
+	    if (criteria==="username"){
+	    	if(props.username!==""){
+		       	PollOfUser=props.pollList.filter(poll=>{
+		        	return poll.createdBy===props.username
+		      	})
+		      	.concat(
+		      		props.pollList.filter(pollx=>{
+		      		return pollx.createdBy!==props.username
+		      		})
+		      	)
+		      }else{
+		      	PollOfUser.sort((a,b)=>{
+		      		return a.createdBy.localeCompare(b.createdBy)
+		      	})
+		      }
+	    }else if(criteria==="oldest"){
+	      PollOfUser.sort((a,b)=>{
+	        return a.id-b.id
+	      	})
+	    }else if(criteria==="newest"){
+	      PollOfUser.sort((a,b)=>{
+	        return -a.id+b.id
+	      });
+   		}else{
+   			PollOfUser=props.pollList
+   		}
+   		return PollOfUser
+   	}
 	return(
 		<PanelGroup accordion id="accordion-example">
-		{props.pollList.map((poll, index)=>{
+		{filterPoll(props.filterBy).map((poll, index)=>{
+			let votes=poll.options.map(el =>el.vote); 
+			let labels=poll.options.map(el=>el.value);
+			let data={
+				labels:labels,
+				datasets:[{
+					
+					backgroundColor: '#66B032',
+        			borderColor: '#66B032',
+        			data:votes
+				}]
+			}
+			let options = {
+      			scales: {
+		            xAxes: [{
+		                stacked: true,
+		            }],
+		            yAxes: [{
+		                stacked: true,
+		            }]
+		        },
+		        tooltips: {
+    	callbacks: {
+      	label: function(tooltipItem) {
+     
+        	
+        }
+      }
+    }
+    		}
 			return (
-				<Panel eventKey={index+1}>
+				<Panel eventKey={index+1} bsStyle="primary">
 		          	<Panel.Heading style={{textAlign:'left'}} >
 		          		<Panel.Title onClick={()=>props.editPoll(index)} 
 		          			style={{display:'inline',cursor:'pointer'}}
@@ -28,20 +88,14 @@ export default (props)=>{
 		            	<Panel.Body collapsible>
 		            		<Col xs='12' sm='6'>
 								{poll.options.map((option,position)=>{
-									// let votedPollNum = props.userVotedOnPoll.findIndex(el=>
-									// 		{//select the index of poll_id in the list user voted on
-									// 			return el.hasOwnProperty(poll.id)
-									// 		}
-									// 	);console.log('votedPollNum',votedPollNum,votedPollNum[position])
 			                		return (
 			                				
-			                					<InputGroup inline style={{margin:'5px'}} key={position}>
+			                					<InputGroup inline style={{margin:'5px'}} key={position} >
 								                    <FormControl 
 								                        type="button"
-								                        placeholder="Enter Option"
 								                        defaultValue={option.value}
 								                    /> 
-								                    <InputGroup.Addon >
+								                    <InputGroup.Addon style={{backgroundColor:'#d9edd1'}}>
 								                        <input 
 									                        style={{verticalAlign:'middle'}} 
 									                        type="checkbox"
@@ -55,7 +109,12 @@ export default (props)=>{
 			                	})}
 		                	</Col>
 		                	<Col xs='12' sm='6'>
-		                		Chart Here
+		                		<HorizontalBar 
+		                		data={data} 
+		                		options={options} 
+		                		maintainAspectRatio={false} 
+		                		height={1000}
+         						width={3000}/>
 		                	</Col>
 		           		</Panel.Body>
 		           		

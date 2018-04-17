@@ -3,7 +3,7 @@ import {Nav,Navbar,NavItem,NavDropdown,MenuItem } from 'react-bootstrap';
 
 export default (props)=>{
 	return (
-			<Navbar collapseOnSelect >
+			<Navbar collapseOnSelect  inverse>
 				<Navbar.Header>
 					<Navbar.Brand >
 						<span style={{cursor:'pointer'}} onClick={props.startVote}>

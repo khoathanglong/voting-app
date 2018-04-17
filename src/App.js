@@ -8,6 +8,7 @@ import PanelList from './poll_list.js';
 import SignUp from './signup.js';
 import LogIn from './login.js';
 import MyNavbar from './nav.js';
+import Filter from './filter.js'
 class App extends Component {
   constructor(){
     super();
@@ -24,6 +25,7 @@ class App extends Component {
       IsSigningUp:false,
       loginError:'',
       signupError:'',
+      filterBy:"newest"
     };
     this.openLogIn=this.openLogIn.bind(this);
     this.openSignUp=this.openSignUp.bind(this);
@@ -39,7 +41,8 @@ class App extends Component {
     this.userVerify=this.userVerify.bind(this);
     this.openEditPanel=this.openEditPanel.bind(this);
     this.handleLogOut=this.handleLogOut.bind(this);
-    this.fetchLogin=this.fetchLogin.bind(this)
+    this.fetchLogin=this.fetchLogin.bind(this);
+    this.handleFilter=this.handleFilter.bind(this)
   }
 
   componentDidMount(){
@@ -331,6 +334,14 @@ class App extends Component {
     sessionStorage.removeItem('token');
     this.setState({user:{username:'',votedOnPoll:[],loggedIn:false}})
   }
+  handleFilter(e){
+    let filterBy=e.target.value;
+    this.setState({filterBy})
+    if (this.state.user.username===""){
+      console.log(filterBy)
+    }  
+  }
+
   render() {       
     return (
       <Grid className="App">
@@ -341,6 +352,7 @@ class App extends Component {
             user={this.state.user}
             logOut={this.handleLogOut}
           />
+
           <SignUp 
             handleSignUp={this.handleSignUp}
             openSignUpModal={this.state.IsSigningUp}
@@ -353,6 +365,13 @@ class App extends Component {
             loginError={this.state.loginError}
             handleModalHide={this.openLogIn}
           />
+
+          <Filter 
+            username={this.state.user.username}
+            filterBy={this.state.filterBy} 
+            handleFilter={this.handleFilter}
+          />
+          <br/>
           <ModalPoll 
             closeModal={this.closeModal}
             currentPoll={this.state.currentPoll}
@@ -371,7 +390,8 @@ class App extends Component {
             handleVote={this.handleVote}
             submitVote={this.submitPoll}
             editPoll={this.openEditPanel}
-            userVotedOnPoll={this.state.user.votedOnPoll}
+            username={this.state.user.username}
+            filterBy={this.state.filterBy}
           /> 
       </Grid>
     );
