@@ -25,7 +25,6 @@ class App extends Component {
       IsSigningUp:false,
       loginError:'',
       signupError:'',
-      filterBy:"newest"
     };
     this.openLogIn=this.openLogIn.bind(this);
     this.openSignUp=this.openSignUp.bind(this);
@@ -42,7 +41,7 @@ class App extends Component {
     this.openEditPanel=this.openEditPanel.bind(this);
     this.handleLogOut=this.handleLogOut.bind(this);
     this.fetchLogin=this.fetchLogin.bind(this);
-    this.handleFilter=this.handleFilter.bind(this)
+    this.sortPoll=this.sortPoll.bind(this)
   }
 
   componentDidMount(){
@@ -54,7 +53,8 @@ class App extends Component {
       })
     })
     .then(()=>{ //must set pollList state before verify user
-       const token=sessionStorage.getItem('token');
+      this.sortPoll('newest');//sort newest poll
+      const token=sessionStorage.getItem('token');
       if(token){
         this.userVerify();
       }
@@ -204,10 +204,7 @@ class App extends Component {
       pollList[index].options[position].vote-=1;
       pollList[index].options[position].isVoted=false;
         votedOption[pollId].splice(votedOption[pollId].findIndex(el=>el===position),1);//remove options that user unchecks 
-        console.log('position',position,votedOption[pollId])   
-        console.log('votedOnPollfinalzz:', votedOnPoll)   
     }
-    console.log('votedOnPollfinal:', votedOnPoll)
     this.votePoll({...pollList[index]}); // Put updated poll to the server
     this.fetchUserVote(votedOnPoll) ;
     this.setState((preState)=>
@@ -334,14 +331,35 @@ class App extends Component {
     sessionStorage.removeItem('token');
     this.setState({user:{username:'',votedOnPoll:[],loggedIn:false}})
   }
-  handleFilter(e){
-    let filterBy=e.target.value;
-    this.setState({filterBy})
-    if (this.state.user.username===""){
-      console.log(filterBy)
-    }  
-  }
 
+  sortPoll(criteria){
+    let PollOfUser=this.state.pollList.slice();
+      if (criteria==="username"){
+        if(this.state.user.username!==""){
+            PollOfUser=this.state.pollList.filter(poll=>{
+              return poll.createdBy===this.state.user.username
+            })
+            .concat(
+              this.state.pollList.filter(poll=>{
+              return poll.createdBy!==this.state.user.username
+              })
+            )
+          }else{
+            PollOfUser.sort((a,b)=>{
+              return a.createdBy.localeCompare(b.createdBy)
+            })
+          }
+      }else if(criteria==="oldest"){
+        PollOfUser.sort((a,b)=>{
+          return a.id-b.id
+          })
+      }else if(criteria==="newest"){
+        PollOfUser.sort((a,b)=>{
+          return -a.id+b.id
+        });
+      }
+      this.setState({pollList:PollOfUser})
+    }
   render() {       
     return (
       <Grid className="App">
@@ -368,8 +386,7 @@ class App extends Component {
 
           <Filter 
             username={this.state.user.username}
-            filterBy={this.state.filterBy} 
-            handleFilter={this.handleFilter}
+            sortPoll={this.sortPoll}
           />
           <br/>
           <ModalPoll 
@@ -391,7 +408,6 @@ class App extends Component {
             submitVote={this.submitPoll}
             editPoll={this.openEditPanel}
             username={this.state.user.username}
-            filterBy={this.state.filterBy}
           /> 
       </Grid>
     );

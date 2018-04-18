@@ -8,47 +8,18 @@ export default (props)=>{
 			    edit
 			  </Tooltip>
 			);
-	const filterPoll=(criteria)=>{
-		let PollOfUser=props.pollList;
-	    if (criteria==="username"){
-	    	if(props.username!==""){
-		       	PollOfUser=props.pollList.filter(poll=>{
-		        	return poll.createdBy===props.username
-		      	})
-		      	.concat(
-		      		props.pollList.filter(pollx=>{
-		      		return pollx.createdBy!==props.username
-		      		})
-		      	)
-		      }else{
-		      	PollOfUser.sort((a,b)=>{
-		      		return a.createdBy.localeCompare(b.createdBy)
-		      	})
-		      }
-	    }else if(criteria==="oldest"){
-	      PollOfUser.sort((a,b)=>{
-	        return a.id-b.id
-	      	})
-	    }else if(criteria==="newest"){
-	      PollOfUser.sort((a,b)=>{
-	        return -a.id+b.id
-	      });
-   		}else{
-   			PollOfUser=props.pollList
-   		}
-   		return PollOfUser
-   	}
+
 	return(
 		<PanelGroup accordion id="accordion-example">
-		{filterPoll(props.filterBy).map((poll, index)=>{
+		{props.pollList.map((poll, index)=>{
 			let votes=poll.options.map(el =>el.vote); 
 			let labels=poll.options.map(el=>el.value);
 			let data={
 				labels:labels,
 				datasets:[{
-					
-					backgroundColor: '#66B032',
-        			borderColor: '#66B032',
+					label:poll.pollName,
+					backgroundColor: '#183BF0',
+        			borderColor: '#183BF0',
         			data:votes
 				}]
 			}
@@ -60,16 +31,10 @@ export default (props)=>{
 		            yAxes: [{
 		                stacked: true,
 		            }]
-		        },
-		        tooltips: {
-    	callbacks: {
-      	label: function(tooltipItem) {
-     
-        	
-        }
-      }
-    }
-    		}
+		        }
+		    }
+		    let height=300/poll.options.length;
+		    let width=100*poll.options.length;
 			return (
 				<Panel eventKey={index+1} bsStyle="primary">
 		          	<Panel.Heading style={{textAlign:'left'}} >
@@ -112,9 +77,9 @@ export default (props)=>{
 		                		<HorizontalBar 
 		                		data={data} 
 		                		options={options} 
-		                		maintainAspectRatio={false} 
-		                		height={1000}
-         						width={3000}/>
+		                		height={height}
+         						width={width}
+         						/>
 		                	</Col>
 		           		</Panel.Body>
 		           		

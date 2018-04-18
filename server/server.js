@@ -3,7 +3,6 @@ const app = express ();
 const MongoClient=require('mongodb').MongoClient;
 const assert=require('assert');
 const url= 'mongodb://localhost:27017';
-const usersData= require('./user.js').users;
 const auth=require('./auth.js');
 const jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 const bcrypt= require('bcrypt');
@@ -15,12 +14,10 @@ app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: false })); 
 app.use(bodyParser.json());	
 
-
 MongoClient.connect(url,(err,client)=>{
 	assert.equal(err,null);
 	console.log('connected to server');
 	const db = client.db('votingApp');
-	const user = new usersData(db);
 	
 	app.post('/signup', (req,res)=>{
 		let username=req.body.username;
@@ -94,10 +91,8 @@ MongoClient.connect(url,(err,client)=>{
 
 	app.put('/poll/edit',verifyToken,(req,res)=>{
 		let updatedPoll=req.body.poll;
-		console.log(updatedPoll)
 		db.collection('polls').findOne({id:updatedPoll.id},(err,result)=>{
 			assert.equal(null,err);
-			console.log(result)
 			if(!result){
 				db.collection('polls').insertOne(updatedPoll);
 				res.json({message:'New poll added successfully'})
@@ -124,13 +119,13 @@ MongoClient.connect(url,(err,client)=>{
 	})	
 
 	app.put('/vote/user/:username',(req,res)=>{
-			let username=req.params.username;console.log(req.body.votedOnPoll)
+			let username=req.params.username;
 			if(username){
 				db.collection('users').updateOne(
 					{username:username},
 					{$set:{votedOnPoll:req.body.votedOnPoll}}
 				)
-			}else{console.log('zzz')}
+			}
 	})
 
 	
