@@ -2,14 +2,14 @@ const express = require('express');
 const app = express ();
 const MongoClient=require('mongodb').MongoClient;
 const assert=require('assert');
-const url= 'mongodb://localhost:27017';
+const url= 'mongodb://<username>:<password>@ds247439.mlab.com:47439/kd-voting-app';
 const auth=require('./auth.js');
 const jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
 const bcrypt= require('bcrypt');
 const verifyToken=require('./verify-token.js')
+const bodyParser= require('body-parser');
+const morgan= require('morgan');
 
-bodyParser= require('body-parser');
-morgan= require('morgan')
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: false })); 
 app.use(bodyParser.json());	
@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 MongoClient.connect(url,(err,client)=>{
 	assert.equal(err,null);
 	console.log('connected to server');
-	const db = client.db('votingApp');
+	const db = client.db('kd-voting-app');
 	
 	app.post('/signup', (req,res)=>{
 		let username=req.body.username;
@@ -130,4 +130,4 @@ MongoClient.connect(url,(err,client)=>{
 
 	
 })//outer
-app.listen(3001,()=>{console.log('server connected on:3001')})
+app.listen(process.env.PORT ||3001,()=>{console.log('server connected')})

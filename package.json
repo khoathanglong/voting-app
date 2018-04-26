@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "homepage": "https://khoathanglong.github.io/voting-app",
   "private": true,
-  "proxy": "http://localhost:3001",
   "dependencies": {
     "bcrypt": "^1.0.3",
     "body-parser": "^1.18.2",

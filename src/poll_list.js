@@ -1,6 +1,6 @@
 import React from 'react';
 import {OverlayTrigger ,Tooltip,PanelGroup,Panel, FormControl,Col,InputGroup } from 'react-bootstrap';
-import {HorizontalBar} from 'react-chartjs-2';
+import {HorizontalBar,Doughnut } from 'react-chartjs-2';
 
 export default (props)=>{
 	const tooltip = (
@@ -12,7 +12,7 @@ export default (props)=>{
 	return(
 		<PanelGroup accordion id="accordion-example">
 		{props.pollList.map((poll, index)=>{
-			let votes=poll.options.map(el =>el.vote); 
+			let votes=poll.options.map(el =>el.vote); console.log(votes.length)
 			let labels=poll.options.map(el=>el.value);
 			let data={
 				labels:labels,
@@ -39,6 +39,8 @@ export default (props)=>{
 		            yAxes: [{
 		                stacked: true,
 		                barPercentage:0.9,
+		                categoryPercentage:0.9,
+		             	
 		            }],
 		        },
 		    }
@@ -84,7 +86,7 @@ export default (props)=>{
 		                		<HorizontalBar 
 		                		data={data} 
 		                		options={options} 
-		            
+		                		width={2000/votes.length}
          						/>
 		                	</Col>
 		           		</Panel.Body>
