@@ -45,7 +45,7 @@ class App extends Component {
   }
 
   componentDidMount(){
-    fetch('/polls')
+    fetch('https://kd-voting-app.glitch.me/polls')
     .then(res=>res.json())
     .then(result=>{
       this.setState(preState=>{
@@ -78,6 +78,9 @@ class App extends Component {
   }
 
   createNewPoll(){
+    if (this.state.user.username==="") {
+      alert('You need to log in to create a new poll')
+    }
     this.setState(preState=>{
         return {
           currentPoll:{
@@ -117,7 +120,7 @@ class App extends Component {
     });
   }
   fetchUserVote(votedOnPoll){
-    fetch(`/vote/user/${this.state.user.username}`,{
+    fetch(`https://kd-voting-app.glitch.me/vote/user/${this.state.user.username}`,{
       method:'put',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({votedOnPoll:votedOnPoll})
@@ -162,7 +165,7 @@ class App extends Component {
   }
 
   updatePoll(newPoll){
-    fetch('/poll/edit',{
+    fetch('https://kd-voting-app.glitch.me/poll/edit',{
         method:"PUT",
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({poll:newPoll,token:sessionStorage.getItem('token')})
@@ -174,7 +177,7 @@ class App extends Component {
   }
 
   votePoll(newPoll){
-    fetch('/poll/vote',{
+    fetch('https://kd-voting-app.glitch.me/poll/vote',{
         method:"PUT",
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({poll:newPoll,token:sessionStorage.getItem('token')})
@@ -217,6 +220,9 @@ class App extends Component {
     );
   }
   openEditPanel(index){
+    if (this.state.user.username==="") {
+      alert('You need to log in to edit this poll')
+    }
     this.setState(preState=>{
       return {
         currentPoll:{
@@ -228,12 +234,6 @@ class App extends Component {
     })
   }
   checkUserVoted(user){
-     // user:{
-     //          username:result.username,
-     //          votedOnPoll:result.votedOnPoll,
-     //          loggedIn:result.authenticated
-     //        } user should look like this
-
     let userPollList= this.state.pollList.slice();
       userPollList.forEach((poll,index)=>{
         user.votedOnPoll.forEach((pollVote,position)=>{
@@ -252,7 +252,7 @@ class App extends Component {
     this.setState({user:user,IsLoggingIn:false,pollList:userPollList})
   }
   userVerify(){
-    fetch("/verify",{
+    fetch("https://kd-voting-app.glitch.me/verify",{
       method:"POST",
       headers:{'Content-Type': 'application/json'},
       body:JSON.stringify({token:sessionStorage.getItem('token')})
@@ -275,7 +275,7 @@ class App extends Component {
         username,
         password
       };
-    fetch('/login',{
+    fetch('https://kd-voting-app.glitch.me/login',{
       method:"POST",
       headers:{'Content-Type': 'application/json'},//content-type is a must
       body:JSON.stringify(userLogin)
@@ -304,7 +304,7 @@ class App extends Component {
         username:e.target.username.value,
         password:e.target.password.value
       }
-    fetch('/signup',{
+    fetch('https://kd-voting-app.glitch.me/signup',{
       method:"POST",
       headers:{'Content-Type': 'application/json'},//content-type is a must
       body:JSON.stringify(userSignUp)
@@ -330,6 +330,7 @@ class App extends Component {
   handleLogOut(){
     sessionStorage.removeItem('token');
     this.setState({user:{username:'',votedOnPoll:[],loggedIn:false}})
+    window.location.reload()
   }
 
   sortPoll(criteria){

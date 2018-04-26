@@ -20,21 +20,28 @@ export default (props)=>{
 					label:poll.pollName,
 					backgroundColor: '#183BF0',
         			borderColor: '#183BF0',
-        			data:votes
+        			data:votes,
+
 				}]
 			}
 			let options = {
+				legend:{
+					display:false
+				},
       			scales: {
 		            xAxes: [{
 		                stacked: true,
+		                ticks:{
+		                	min: 0,
+		               		stepSize: 1
+		        		}
 		            }],
 		            yAxes: [{
 		                stacked: true,
-		            }]
-		        }
+		                barPercentage:0.9,
+		            }],
+		        },
 		    }
-		    let height=300/poll.options.length;
-		    let width=100*poll.options.length;
 			return (
 				<Panel eventKey={index+1} bsStyle="primary">
 		          	<Panel.Heading style={{textAlign:'left'}} >
@@ -77,8 +84,7 @@ export default (props)=>{
 		                		<HorizontalBar 
 		                		data={data} 
 		                		options={options} 
-		                		height={height}
-         						width={width}
+		            
          						/>
 		                	</Col>
 		           		</Panel.Body>

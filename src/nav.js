@@ -14,15 +14,18 @@ export default (props)=>{
 				</Navbar.Header>
 				<Navbar.Collapse>
 					<Nav>
-						<NavItem onClick={props.openSignUp}>
-							Sign up
-						</NavItem>
+						{props.user.loggedIn?null:
+							<NavItem onClick={props.openSignUp}>
+								Sign up
+							</NavItem>
+						}
+						
 						{props.user.loggedIn?<NavItem onClick={props.logOut}>Log Out</NavItem>:
 							<NavDropdown title={`Log In`} id="NavDropdown">
 								<MenuItem eventKey={1} onClick={props.openLogIn}>
 									Log in with your account
 								</MenuItem>
-								<MenuItem eventKey={2}>Log in with Google</MenuItem> 
+								<MenuItem eventKey={2}>Log in with Google (in progress)</MenuItem> 
 							</NavDropdown>
 						}
 					</Nav>
